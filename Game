@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>جاروی هوشمند 3D 🧹</title>
+<style>
+  body, html {
+    margin: 0; padding: 0; overflow: hidden;
+    height: 100%; background: #000;
+    font-family: "Vazirmatn", sans-serif;
+    touch-action: none;
+  }
+  #menu, #store, #gameOver, #questionBox {
+    position: absolute; inset: 0; display: none;
+    justify-content: center; align-items: center; flex-direction: column;
+    background: rgba(0,0,0,0.7); color: #fff; text-align: center;
+  }
+  #menu.active, #store.active, #gameOver.active, #questionBox.active { display: flex; }
+  button {
+    background: linear-gradient(90deg,#ff6a00,#ee0979);
+    border: none; color: #fff; border-radius: 20px;
+    padding: 12px 25px; margin: 10px; font-size: 16px;
+  }
+  canvas { display: block; touch-action: none; }
+</style>
+</head>
+<body>
+
+<!-- منو اصلی -->
+<div id="menu" class="active">
+  <h1>🧹 جاروی هوشمند 3D</h1>
+  <p>رکورد: <span id="bestScore">0</span></p>
+  <p>سکه‌ها: <span id="coins">0</span></p>
+  <button onclick="startGame()">شروع بازی</button>
+  <button onclick="openStore()">فروشگاه</button>
+</div>
+
+<!-- فروشگاه -->
+<div id="store">
+  <h2>🛒 فروشگاه جارو</h2>
+  <div id="storeItems"></div>
+  <button onclick="backToMenu()">بازگشت به منو</button>
+</div>
+
+<!-- سوال آموزشی -->
+<div id="questionBox">
+  <h3 id="questionText"></h3>
+  <div id="answers"></div>
+</div>
+
+<!-- پایان بازی -->
+<div id="gameOver">
+  <h2>🏁 بازی تمام شد</h2>
+  <p>امتیاز: <span id="finalScore">0</span> | سکه‌ها: <span id="finalCoins">0</span></p>
+  <button onclick="backToMenu()">بازگشت به منو</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script>
+let scene, camera, renderer;
+let broom, road, coins = [], obstacles = [];
+let score = 0, coinsCount = 0, speed = 0.1;
+let playing = false, lastQuestionTime = 0;
+let data = JSON.parse(localStorage.getItem('vacuumGameData') || '{"coins":0,"highscore":0}');
+document.getElementById("coins").textContent = data.coins;
+document.getElementById("bestScore").textContent = data.highscore;
+
+// سوالات
+const questions = [
+  { q: "چند درجه در یک دایره کامل وجود دارد؟", a: ["180", "360", "90"], c: 1 },
+  { q: "بزرگ‌ترین سیاره منظومه شمسی کدام است؟", a: ["مریخ", "مشتری", "زحل"], c: 1 },
+  { q: "رنگ اولیه قرمز با آبی چه رنگی می‌سازد؟", a: ["سبز", "بنفش", "نارنجی"], c: 1 },
+  { q: "واحد اندازه‌گیری انرژی چیست؟", a: ["ژول", "وات", "ولت"], c: 0 },
+  { q: "اولین حرف الفبای فارسی چیست؟", a: ["ب", "الف", "ت"], c: 1 }
+];
+
+function startGame() {
+  document.getElementById('menu').classList.remove('active');
+  score = 0; coinsCount = 0; speed = 0.15; playing = true;
+  initScene();
+  animate();
+}
+
+function openStore() {
+  document.getElementById('menu').classList.remove('active');
+  document.getElementById('store').classList.add('active');
+}
+
+function backToMenu() {
+  document.getElementById('store').classList.remove('active');
+  document.getElementById('gameOver').classList.remove('active');
+  document.getElementById('menu').classList.add('active');
+}
+
+function initScene() {
+  if (renderer) document.body.removeChild(renderer.domElement);
+  scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x000000, 5, 60);
+
+  camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 100);
+  camera.position.set(0, 2, 5);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(innerWidth, innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(5, 10, 5);
+  scene.add(light);
+  scene.add(new THREE.AmbientLight(0x666666));
+
+  // جاده
+  const roadTexture = new THREE.TextureLoader().load("https://threejs.org/examples/textures/terrain/grasslight-big.jpg");
+  roadTexture.wrapS = roadTexture.wrapT = THREE.RepeatWrapping;
+  const roadMat = new THREE.MeshStandardMaterial({ map: roadTexture });
+  road = new THREE.Mesh(new THREE.PlaneGeometry(10, 2000), roadMat);
+  road.rotation.x = -Math.PI / 2;
+  scene.add(road);
+
+  // جارو
+  const broomTexture = new THREE.TextureLoader().load("https://threejs.org/examples/textures/wood.jpg");
+  broom = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.5, 16), new THREE.MeshStandardMaterial({ map: broomTexture }));
+  broom.position.y = 1;
+  scene.add(broom);
+
+  spawnObjects();
+  lastQuestionTime = performance.now();
+}
+
+function spawnObjects() {
+  const coinTex = new THREE.TextureLoader().load("https://threejs.org/examples/textures/metal.jpg");
+  const obstacleTex = new THREE.TextureLoader().load("https://threejs.org/examples/textures/brick_diffuse.jpg");
+  for (let i = 0; i < 20; i++) {
+    const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.05, 16), new THREE.MeshStandardMaterial({ map: coinTex }));
+    coin.position.set((Math.random() - 0.5) * 6, 0.5, -i * 10);
+    scene.add(coin);
+    coins.push(coin);
+    const obstacle = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1, 0.8), new THREE.MeshStandardMaterial({ map: obstacleTex }));
+    obstacle.position.set((Math.random() - 0.5) * 6, 0.5, -i * 15 - 5);
+    scene.add(obstacle);
+    obstacles.push(obstacle);
+  }
+}
+
+function animate() {
+  if (!playing) return;
+  requestAnimationFrame(animate);
+  road.position.z += speed;
+  coins.forEach(c => {
+    c.rotation.y += 0.1;
+    c.position.z += speed;
+    if (c.position.z > camera.position.z + 2) c.position.z -= 200;
+    if (Math.abs(c.position.x - broom.position.x) < 0.5 && Math.abs(c.position.z - broom.position.z) < 0.5) {
+      c.position.z -= 200; coinsCount++; score += 5;
+    }
+  });
+  obstacles.forEach(o => {
+    o.position.z += speed;
+    if (o.position.z > camera.position.z + 2) o.position.z -= 300;
+    if (Math.abs(o.position.x - broom.position.x) < 0.6 && Math.abs(o.position.z - broom.position.z) < 0.6) endGame();
+  });
+  score += 0.05;
+  speed += 0.0002; // افزایش سختی
+  renderer.render(scene, camera);
+
+  // نمایش سوال هر ۲۰ ثانیه
+  if (performance.now() - lastQuestionTime > 20000) {
+    lastQuestionTime = performance.now();
+    showQuestion();
+  }
+}
+
+// کنترل لمسی
+let touchX = null;
+window.addEventListener("touchstart", e => touchX = e.touches[0].clientX);
+window.addEventListener("touchmove", e => {
+  if (!playing) return;
+  let dx = e.touches[0].clientX - touchX;
+  broom.position.x = Math.max(-4, Math.min(4, broom.position.x + dx * 0.01));
+  touchX = e.touches[0].clientX;
+});
+
+function endGame() {
+  playing = false;
+  data.coins += coinsCount;
+  if (score > data.highscore) data.highscore = Math.floor(score);
+  localStorage.setItem('vacuumGameData', JSON.stringify(data));
+  document.getElementById('finalScore').textContent = Math.floor(score);
+  document.getElementById('finalCoins').textContent = coinsCount;
+  document.getElementById('gameOver').classList.add('active');
+}
+
+function showQuestion() {
+  playing = false;
+  const box = document.getElementById("questionBox");
+  const q = questions[Math.floor(Math.random() * questions.length)];
+  box.classList.add("active");
+  document.getElementById("questionText").textContent = q.q;
+  const ans = document.getElementById("answers");
+  ans.innerHTML = "";
+  q.a.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = opt;
+    btn.onclick = () => {
+      if (i === q.c) score += 10; else score -= 5;
+      box.classList.remove("active");
+      playing = true;
+      animate();
+    };
+    ans.appendChild(btn);
+  });
+}
+
+window.addEventListener('resize', () => {
+  if (!renderer) return;
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
