@@ -188,8 +188,8 @@
         
         #broom-ui {
             position: absolute;
-            width: 80px;
-            height: 120px;
+            width: 60px;
+            height: 100px;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%) translateZ(20px);
@@ -200,65 +200,25 @@
         
         .broom-body {
             position: absolute;
-            width: 12px;
-            height: 90px;
+            width: 10px;
+            height: 80px;
             background: linear-gradient(to bottom, #8B4513, #A0522D);
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
             border-radius: 5px 5px 0 0;
-            box-shadow: 0 0 10px rgba(139, 69, 19, 0.5);
         }
         
         .broom-head {
             position: absolute;
-            width: 70px;
-            height: 25px;
+            width: 50px;
+            height: 20px;
             background: linear-gradient(to bottom, #D2691E, #8B4513);
-            bottom: 90px;
+            bottom: 80px;
             left: 50%;
             transform: translateX(-50%);
-            border-radius: 15px 15px 5px 5px;
+            border-radius: 10px 10px 0 0;
             box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-        
-        .broom-bristles {
-            position: absolute;
-            width: 100%;
-            height: 15px;
-            background: linear-gradient(to bottom, #654321, #8B4513);
-            bottom: 0;
-            border-radius: 0 0 15px 15px;
-        }
-        
-        .broom-handle {
-            position: absolute;
-            width: 8px;
-            height: 40px;
-            background: linear-gradient(to bottom, #DEB887, #CD853F);
-            bottom: 115px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 5px;
-        }
-        
-        .broom-glow {
-            position: absolute;
-            width: 100px;
-            height: 100px;
-            background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0) 70%);
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 50%;
-            z-index: -1;
-            animation: glow 2s infinite alternate;
-        }
-        
-        @keyframes glow {
-            0% { opacity: 0.3; }
-            100% { opacity: 0.7; }
         }
         
         #magnet-effect {
@@ -270,7 +230,6 @@
             display: none;
             pointer-events: none;
             z-index: 5;
-            transition: all 0.1s;
         }
         
         .stats {
@@ -464,10 +423,6 @@
             border: 2px solid gold;
         }
         
-        #image-loader {
-            display: none;
-        }
-        
         .loading-screen {
             position: absolute;
             top: 0;
@@ -543,12 +498,8 @@
                 <canvas id="game-canvas"></canvas>
                 <div id="game-ui">
                     <div id="broom-ui">
-                        <div class="broom-glow"></div>
                         <div class="broom-body"></div>
-                        <div class="broom-head">
-                            <div class="broom-bristles"></div>
-                        </div>
-                        <div class="broom-handle"></div>
+                        <div class="broom-head"></div>
                     </div>
                     <div id="magnet-effect"></div>
                 </div>
@@ -710,11 +661,6 @@
             </div>
             <button id="category-save" class="btn">ذخیره و بازگشت</button>
         </div>
-    </div>
-
-    <!-- تصاویر آشغال‌ها -->
-    <div id="image-loader" style="display: none;">
-        <!-- این تصاویر از طریق جاوااسکریپت لود می‌شوند -->
     </div>
 
     <script>
@@ -879,138 +825,28 @@
             }
         ];
         
-        // تصاویر آشغال‌ها - استفاده از SVG و Canvas برای ایجاد تصاویر داخلی
+        // تصاویر آشغال‌ها - استفاده از تصاویر واقعی
         const trashImages = {};
         const trashTypes = ['pofak', 'chips', 'paper', 'leaf-green', 'leaf-yellow'];
         
-        // ایجاد تصاویر داخلی برای آشغال‌ها
-        function createInternalImages() {
+        // بارگذاری تصاویر واقعی
+        function loadRealImages() {
             return new Promise((resolve) => {
                 let loadedCount = 0;
                 const totalCount = trashTypes.length;
                 
+                // استفاده از تصاویر واقعی از اینترنت
+                const imageUrls = {
+                    'pofak': 'https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?w=100&h=100&fit=crop&crop=center',
+                    'chips': 'https://images.unsplash.com/photo-1566479905927-2a3d6164421c?w=100&h=100&fit=crop&crop=center',
+                    'paper': 'https://images.unsplash.com/photo-1601662528567-526cd06f6582?w=100&h=100&fit=crop&crop=center',
+                    'leaf-green': 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=100&h=100&fit=crop&crop=center',
+                    'leaf-yellow': 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=100&h=100&fit=crop&crop=center&sat=-50&bri=20'
+                };
+                
                 trashTypes.forEach(type => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 100;
-                    canvas.height = 100;
-                    const ctx = canvas.getContext('2d');
-                    
-                    // پس‌زمینه شفاف
-                    ctx.clearRect(0, 0, 100, 100);
-                    
-                    switch(type) {
-                        case 'pofak':
-                            // پفک نارنجی
-                            ctx.fillStyle = '#FF8C00';
-                            ctx.beginPath();
-                            ctx.arc(50, 50, 40, 0, Math.PI * 2);
-                            ctx.fill();
-                            
-                            // جزئیات پفک
-                            ctx.fillStyle = '#FF4500';
-                            for (let i = 0; i < 8; i++) {
-                                const angle = (i / 8) * Math.PI * 2;
-                                const x = 50 + Math.cos(angle) * 25;
-                                const y = 50 + Math.sin(angle) * 25;
-                                ctx.beginPath();
-                                ctx.arc(x, y, 8, 0, Math.PI * 2);
-                                ctx.fill();
-                            }
-                            break;
-                            
-                        case 'chips':
-                            // چیپس زرد
-                            ctx.fillStyle = '#FFD700';
-                            ctx.beginPath();
-                            ctx.ellipse(50, 50, 35, 25, Math.PI/4, 0, Math.PI * 2);
-                            ctx.fill();
-                            
-                            // خطوط روی چیپس
-                            ctx.strokeStyle = '#FF8C00';
-                            ctx.lineWidth = 2;
-                            for (let i = 0; i < 5; i++) {
-                                const y = 30 + i * 10;
-                                ctx.beginPath();
-                                ctx.moveTo(30, y);
-                                ctx.lineTo(70, y + 10);
-                                ctx.stroke();
-                            }
-                            break;
-                            
-                        case 'paper':
-                            // کاغذ مچاله شده
-                            ctx.fillStyle = '#F5F5F5';
-                            ctx.beginPath();
-                            ctx.moveTo(30, 30);
-                            ctx.lineTo(70, 40);
-                            ctx.lineTo(65, 70);
-                            ctx.lineTo(35, 65);
-                            ctx.closePath();
-                            ctx.fill();
-                            
-                            // سایه‌ها
-                            ctx.strokeStyle = '#E0E0E0';
-                            ctx.lineWidth = 2;
-                            ctx.beginPath();
-                            ctx.moveTo(40, 35);
-                            ctx.lineTo(60, 45);
-                            ctx.stroke();
-                            ctx.beginPath();
-                            ctx.moveTo(45, 50);
-                            ctx.lineTo(55, 60);
-                            ctx.stroke();
-                            break;
-                            
-                        case 'leaf-green':
-                            // برگ سبز
-                            ctx.fillStyle = '#228B22';
-                            ctx.beginPath();
-                            ctx.ellipse(50, 50, 30, 20, 0, 0, Math.PI * 2);
-                            ctx.fill();
-                            
-                            // رگبرگ
-                            ctx.strokeStyle = '#006400';
-                            ctx.lineWidth = 2;
-                            ctx.beginPath();
-                            ctx.moveTo(50, 30);
-                            ctx.lineTo(50, 70);
-                            ctx.stroke();
-                            ctx.beginPath();
-                            ctx.moveTo(50, 40);
-                            ctx.lineTo(30, 35);
-                            ctx.stroke();
-                            ctx.beginPath();
-                            ctx.moveTo(50, 40);
-                            ctx.lineTo(70, 45);
-                            ctx.stroke();
-                            break;
-                            
-                        case 'leaf-yellow':
-                            // برگ زرد
-                            ctx.fillStyle = '#FFD700';
-                            ctx.beginPath();
-                            ctx.ellipse(50, 50, 30, 20, Math.PI/6, 0, Math.PI * 2);
-                            ctx.fill();
-                            
-                            // رگبرگ
-                            ctx.strokeStyle = '#B8860B';
-                            ctx.lineWidth = 2;
-                            ctx.beginPath();
-                            ctx.moveTo(50, 30);
-                            ctx.lineTo(50, 70);
-                            ctx.stroke();
-                            ctx.beginPath();
-                            ctx.moveTo(50, 40);
-                            ctx.lineTo(30, 35);
-                            ctx.stroke();
-                            ctx.beginPath();
-                            ctx.moveTo(50, 40);
-                            ctx.lineTo(70, 45);
-                            ctx.stroke();
-                            break;
-                    }
-                    
                     const img = new Image();
+                    img.crossOrigin = "Anonymous"; // برای حل مشکل CORS
                     img.onload = () => {
                         trashImages[type] = img;
                         loadedCount++;
@@ -1026,8 +862,81 @@
                             resolve();
                         }
                     };
-                    img.src = canvas.toDataURL();
+                    img.onerror = () => {
+                        // اگر تصویر لود نشد، از تصویر جایگزین استفاده کن
+                        console.warn(`تصویر ${type} لود نشد، استفاده از تصویر جایگزین`);
+                        createFallbackImage(type).then(fallbackImg => {
+                            trashImages[type] = fallbackImg;
+                            loadedCount++;
+                            loadingProgress.style.width = `${(loadedCount / totalCount) * 100}%`;
+                            loadingText.textContent = `بارگذاری تصاویر: ${loadedCount} از ${totalCount}`;
+                            
+                            if (loadedCount === totalCount) {
+                                imagesLoaded = true;
+                                setTimeout(() => {
+                                    loadingScreen.style.display = 'none';
+                                    screens.mainMenu.classList.add('active');
+                                }, 500);
+                                resolve();
+                            }
+                        });
+                    };
+                    img.src = imageUrls[type] + '&' + new Date().getTime(); // اضافه کردن timestamp برای جلوگیری از کش
                 });
+            });
+        }
+        
+        // ایجاد تصاویر جایگزین در صورت لود نشدن تصاویر اصلی
+        function createFallbackImage(type) {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 100;
+                canvas.height = 100;
+                const ctx = canvas.getContext('2d');
+                
+                // پس‌زمینه شفاف
+                ctx.clearRect(0, 0, 100, 100);
+                
+                switch(type) {
+                    case 'pofak':
+                        ctx.fillStyle = '#FF8C00';
+                        ctx.beginPath();
+                        ctx.arc(50, 50, 40, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                    case 'chips':
+                        ctx.fillStyle = '#FFD700';
+                        ctx.beginPath();
+                        ctx.ellipse(50, 50, 35, 25, Math.PI/4, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                    case 'paper':
+                        ctx.fillStyle = '#F5F5F5';
+                        ctx.beginPath();
+                        ctx.moveTo(30, 30);
+                        ctx.lineTo(70, 40);
+                        ctx.lineTo(65, 70);
+                        ctx.lineTo(35, 65);
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                    case 'leaf-green':
+                        ctx.fillStyle = '#228B22';
+                        ctx.beginPath();
+                        ctx.ellipse(50, 50, 30, 20, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                    case 'leaf-yellow':
+                        ctx.fillStyle = '#FFD700';
+                        ctx.beginPath();
+                        ctx.ellipse(50, 50, 30, 20, Math.PI/6, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                }
+                
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.src = canvas.toDataURL();
             });
         }
         
@@ -1128,8 +1037,8 @@
             updateBroomPosition();
             
             // تنظیم اندازه جارو بر اساس ارتقاها
-            broomUI.style.width = (80 * upgrades.size) + 'px';
-            broomUI.style.height = (120 * upgrades.size) + 'px';
+            broomUI.style.width = (60 * upgrades.size) + 'px';
+            broomUI.style.height = (100 * upgrades.size) + 'px';
             
             // فعال کردن آهنربا اگر خریداری شده
             if (upgrades.magnet) {
@@ -1260,7 +1169,7 @@
                     const y = stain.y;
                     const size = stain.size;
                     
-                    // استفاده از تصاویر داخلی
+                    // استفاده از تصاویر واقعی
                     if (trashImages[stain.type]) {
                         ctx.save();
                         ctx.translate(x, y);
@@ -1534,7 +1443,6 @@
         function continueGame() {
             if (totalCoins >= 5) {
                 totalCoins -= 5;
-                coins -= 5;
                 saveGameData();
                 
                 // حذف آشغال‌هایی که از صفحه خارج شده‌اند
@@ -1559,6 +1467,7 @@
                 showScreen('gameScreen');
             } else {
                 alert('سکه کافی ندارید!');
+                showScreen('mainMenu');
             }
         }
         
@@ -1739,8 +1648,8 @@
                         sizePriceElement.textContent = 75 * upgrades.size;
                         
                         // بزرگ‌تر کردن جارو
-                        broomUI.style.width = (80 * upgrades.size) + 'px';
-                        broomUI.style.height = (120 * upgrades.size) + 'px';
+                        broomUI.style.width = (60 * upgrades.size) + 'px';
+                        broomUI.style.height = (100 * upgrades.size) + 'px';
                         
                         alert(`جاروی شما اکنون ${upgrades.size}x بزرگ‌تر شده است!`);
                     } else {
@@ -1863,8 +1772,8 @@
         // بارگذاری اولیه داده‌های بازی
         loadGameData();
         
-        // بارگذاری تصاویر داخلی
-        createInternalImages();
+        // بارگذاری تصاویر واقعی
+        loadRealImages();
     </script>
 </body>
 </html>
