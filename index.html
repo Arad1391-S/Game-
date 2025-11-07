@@ -188,8 +188,8 @@
         
         #broom-ui {
             position: absolute;
-            width: 60px;
-            height: 100px;
+            width: 80px;
+            height: 120px;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%) translateZ(20px);
@@ -200,25 +200,65 @@
         
         .broom-body {
             position: absolute;
-            width: 10px;
-            height: 80px;
+            width: 12px;
+            height: 90px;
             background: linear-gradient(to bottom, #8B4513, #A0522D);
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
             border-radius: 5px 5px 0 0;
+            box-shadow: 0 0 10px rgba(139, 69, 19, 0.5);
         }
         
         .broom-head {
             position: absolute;
-            width: 50px;
-            height: 20px;
+            width: 70px;
+            height: 25px;
             background: linear-gradient(to bottom, #D2691E, #8B4513);
-            bottom: 80px;
+            bottom: 90px;
             left: 50%;
             transform: translateX(-50%);
-            border-radius: 10px 10px 0 0;
+            border-radius: 15px 15px 5px 5px;
             box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .broom-bristles {
+            position: absolute;
+            width: 100%;
+            height: 15px;
+            background: linear-gradient(to bottom, #654321, #8B4513);
+            bottom: 0;
+            border-radius: 0 0 15px 15px;
+        }
+        
+        .broom-handle {
+            position: absolute;
+            width: 8px;
+            height: 40px;
+            background: linear-gradient(to bottom, #DEB887, #CD853F);
+            bottom: 115px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 5px;
+        }
+        
+        .broom-glow {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0) 70%);
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            z-index: -1;
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.7; }
         }
         
         #magnet-effect {
@@ -230,6 +270,7 @@
             display: none;
             pointer-events: none;
             z-index: 5;
+            transition: all 0.1s;
         }
         
         .stats {
@@ -414,17 +455,69 @@
         .transition-overlay.active {
             opacity: 1;
         }
+        
+        .continue-option {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 10px;
+            border: 2px solid gold;
+        }
+        
+        #image-loader {
+            display: none;
+        }
+        
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .loading-bar {
+            width: 80%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(45deg, #ff8a00, #e52e71);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s;
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
+        <!-- صفحه لودینگ -->
+        <div id="loading-screen" class="loading-screen">
+            <h2>در حال بارگذاری بازی...</h2>
+            <div class="loading-bar">
+                <div id="loading-progress" class="loading-progress"></div>
+            </div>
+            <p id="loading-text">بارگذاری تصاویر</p>
+        </div>
+        
         <!-- لایه انتقال -->
         <div class="transition-overlay" id="transition-overlay"></div>
         
         <!-- صفحه اصلی -->
-        <div id="main-menu" class="screen active">
+        <div id="main-menu" class="screen">
             <h1 class="floating">جاروی جادویی - نسخه پیشرفته</h1>
-            <p>لکه‌ها را با کشیدن انگشت تمیز کنید!</p>
+            <p>آشغال‌ها را با کشیدن انگشت تمیز کنید!</p>
             <p>لکه‌های طلایی سوالات درسی دارند - پاسخ صحیح = ۱۰ سکه!</p>
             <button id="start-btn" class="btn">شروع بازی</button>
             <button id="tutorial-btn" class="btn">آموزش بازی</button>
@@ -450,8 +543,12 @@
                 <canvas id="game-canvas"></canvas>
                 <div id="game-ui">
                     <div id="broom-ui">
+                        <div class="broom-glow"></div>
                         <div class="broom-body"></div>
-                        <div class="broom-head"></div>
+                        <div class="broom-head">
+                            <div class="broom-bristles"></div>
+                        </div>
+                        <div class="broom-handle"></div>
                     </div>
                     <div id="magnet-effect"></div>
                 </div>
@@ -466,7 +563,13 @@
             <p>رکورد جدید: <span id="new-record">0</span></p>
             <p>سکه‌های کسب شده: <span id="earned-coins">0</span></p>
             <p>سطح فعلی: <span id="final-level">1</span></p>
-            <button id="restart-btn" class="btn">دوباره بازی کنید</button>
+            
+            <div class="continue-option">
+                <p>با پرداخت ۵ سکه بازی را ادامه دهید!</p>
+                <button id="continue-game-btn" class="btn">ادامه بازی (۵ سکه)</button>
+            </div>
+            
+            <button id="restart-btn" class="btn">شروع مجدد</button>
             <button id="menu-btn" class="btn">منوی اصلی</button>
             <button id="report-btn" class="btn">مشاهده گزارش</button>
         </div>
@@ -490,7 +593,8 @@
             <div class="upgrade-item">
                 <div class="upgrade-info">
                     <h3>آهنربای جارو</h3>
-                    <p>جارو لکه‌ها را از فاصله دورتر جذب می‌کند</p>
+                    <p>جارو آشغال‌ها را از فاصله دورتر جذب می‌کند</p>
+                    <p id="magnet-status">وضعیت: <span>غیرفعال</span></p>
                 </div>
                 <div class="upgrade-price">
                     <span class="coin">100</span>
@@ -542,7 +646,7 @@
                     <p>جارو را با کشیدن انگشت به چپ و راست حرکت دهید</p>
                 </div>
                 <div class="step">
-                    <p>لکه‌های معمولی را برای کسب امتیاز تمیز کنید</p>
+                    <p>آشغال‌ها را برای کسب امتیاز تمیز کنید</p>
                 </div>
                 <div class="step">
                     <p>لکه‌های طلایی شامل سوالات درسی هستند</p>
@@ -555,6 +659,9 @@
                 </div>
                 <div class="step">
                     <p>از فروشگاه برای ارتقای جارو استفاده کنید</p>
+                </div>
+                <div class="step">
+                    <p>در صورت باخت، با ۵ سکه می‌توانید بازی را ادامه دهید</p>
                 </div>
             </div>
             
@@ -605,6 +712,11 @@
         </div>
     </div>
 
+    <!-- تصاویر آشغال‌ها -->
+    <div id="image-loader" style="display: none;">
+        <!-- این تصاویر از طریق جاوااسکریپت لود می‌شوند -->
+    </div>
+
     <script>
         // عناصر DOM
         const screens = {
@@ -624,6 +736,9 @@
         const broomUI = document.getElementById('broom-ui');
         const magnetEffect = document.getElementById('magnet-effect');
         const gameArea = document.getElementById('game-area');
+        const loadingScreen = document.getElementById('loading-screen');
+        const loadingProgress = document.getElementById('loading-progress');
+        const loadingText = document.getElementById('loading-text');
         
         // دکمه‌ها
         const startBtn = document.getElementById('start-btn');
@@ -639,6 +754,7 @@
         const reportBtn = document.getElementById('report-btn');
         const reportCloseBtn = document.getElementById('report-close');
         const categorySaveBtn = document.getElementById('category-save');
+        const continueGameBtn = document.getElementById('continue-game-btn');
         
         // عناصر آماری
         const highScoreElement = document.getElementById('high-score');
@@ -656,6 +772,7 @@
         const sizeLevelElement = document.getElementById('size-level');
         const speedPriceElement = document.getElementById('speed-price');
         const sizePriceElement = document.getElementById('size-price');
+        const magnetStatusElement = document.getElementById('magnet-status').querySelector('span');
         
         // عناصر سوالات
         const questionText = document.getElementById('question-text');
@@ -696,6 +813,8 @@
         let startTime = 0;
         let playTime = 0;
         let selectedCategories = ["ریاضی", "علوم", "فارسی"];
+        let gamePaused = false;
+        let imagesLoaded = false;
         
         // ارتقاها
         let upgrades = {
@@ -760,6 +879,158 @@
             }
         ];
         
+        // تصاویر آشغال‌ها - استفاده از SVG و Canvas برای ایجاد تصاویر داخلی
+        const trashImages = {};
+        const trashTypes = ['pofak', 'chips', 'paper', 'leaf-green', 'leaf-yellow'];
+        
+        // ایجاد تصاویر داخلی برای آشغال‌ها
+        function createInternalImages() {
+            return new Promise((resolve) => {
+                let loadedCount = 0;
+                const totalCount = trashTypes.length;
+                
+                trashTypes.forEach(type => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 100;
+                    canvas.height = 100;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // پس‌زمینه شفاف
+                    ctx.clearRect(0, 0, 100, 100);
+                    
+                    switch(type) {
+                        case 'pofak':
+                            // پفک نارنجی
+                            ctx.fillStyle = '#FF8C00';
+                            ctx.beginPath();
+                            ctx.arc(50, 50, 40, 0, Math.PI * 2);
+                            ctx.fill();
+                            
+                            // جزئیات پفک
+                            ctx.fillStyle = '#FF4500';
+                            for (let i = 0; i < 8; i++) {
+                                const angle = (i / 8) * Math.PI * 2;
+                                const x = 50 + Math.cos(angle) * 25;
+                                const y = 50 + Math.sin(angle) * 25;
+                                ctx.beginPath();
+                                ctx.arc(x, y, 8, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                            break;
+                            
+                        case 'chips':
+                            // چیپس زرد
+                            ctx.fillStyle = '#FFD700';
+                            ctx.beginPath();
+                            ctx.ellipse(50, 50, 35, 25, Math.PI/4, 0, Math.PI * 2);
+                            ctx.fill();
+                            
+                            // خطوط روی چیپس
+                            ctx.strokeStyle = '#FF8C00';
+                            ctx.lineWidth = 2;
+                            for (let i = 0; i < 5; i++) {
+                                const y = 30 + i * 10;
+                                ctx.beginPath();
+                                ctx.moveTo(30, y);
+                                ctx.lineTo(70, y + 10);
+                                ctx.stroke();
+                            }
+                            break;
+                            
+                        case 'paper':
+                            // کاغذ مچاله شده
+                            ctx.fillStyle = '#F5F5F5';
+                            ctx.beginPath();
+                            ctx.moveTo(30, 30);
+                            ctx.lineTo(70, 40);
+                            ctx.lineTo(65, 70);
+                            ctx.lineTo(35, 65);
+                            ctx.closePath();
+                            ctx.fill();
+                            
+                            // سایه‌ها
+                            ctx.strokeStyle = '#E0E0E0';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(40, 35);
+                            ctx.lineTo(60, 45);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(45, 50);
+                            ctx.lineTo(55, 60);
+                            ctx.stroke();
+                            break;
+                            
+                        case 'leaf-green':
+                            // برگ سبز
+                            ctx.fillStyle = '#228B22';
+                            ctx.beginPath();
+                            ctx.ellipse(50, 50, 30, 20, 0, 0, Math.PI * 2);
+                            ctx.fill();
+                            
+                            // رگبرگ
+                            ctx.strokeStyle = '#006400';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(50, 30);
+                            ctx.lineTo(50, 70);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(50, 40);
+                            ctx.lineTo(30, 35);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(50, 40);
+                            ctx.lineTo(70, 45);
+                            ctx.stroke();
+                            break;
+                            
+                        case 'leaf-yellow':
+                            // برگ زرد
+                            ctx.fillStyle = '#FFD700';
+                            ctx.beginPath();
+                            ctx.ellipse(50, 50, 30, 20, Math.PI/6, 0, Math.PI * 2);
+                            ctx.fill();
+                            
+                            // رگبرگ
+                            ctx.strokeStyle = '#B8860B';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(50, 30);
+                            ctx.lineTo(50, 70);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(50, 40);
+                            ctx.lineTo(30, 35);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(50, 40);
+                            ctx.lineTo(70, 45);
+                            ctx.stroke();
+                            break;
+                    }
+                    
+                    const img = new Image();
+                    img.onload = () => {
+                        trashImages[type] = img;
+                        loadedCount++;
+                        loadingProgress.style.width = `${(loadedCount / totalCount) * 100}%`;
+                        loadingText.textContent = `بارگذاری تصاویر: ${loadedCount} از ${totalCount}`;
+                        
+                        if (loadedCount === totalCount) {
+                            imagesLoaded = true;
+                            setTimeout(() => {
+                                loadingScreen.style.display = 'none';
+                                screens.mainMenu.classList.add('active');
+                            }, 500);
+                            resolve();
+                        }
+                    };
+                    img.src = canvas.toDataURL();
+                });
+            });
+        }
+        
         // مدیریت نمایش صفحات
         function showScreen(screenName) {
             // پنهان کردن همه صفحات
@@ -807,6 +1078,9 @@
             sizeLevelElement.textContent = upgrades.size;
             speedPriceElement.textContent = 50 * upgrades.speed;
             sizePriceElement.textContent = 75 * upgrades.size;
+            
+            // به‌روزرسانی وضعیت آهنربا
+            magnetStatusElement.textContent = upgrades.magnet ? 'فعال' : 'غیرفعال';
         }
         
         // ذخیره داده‌ها در localStorage
@@ -823,8 +1097,14 @@
         
         // شروع بازی
         function startGame() {
+            if (!imagesLoaded) {
+                alert('لطفاً صبر کنید تا تصاویر بازی کامل بارگذاری شوند.');
+                return;
+            }
+            
             showScreen('gameScreen');
             gameActive = true;
+            gamePaused = false;
             score = 0;
             coins = 0;
             speed = 1;
@@ -848,8 +1128,8 @@
             updateBroomPosition();
             
             // تنظیم اندازه جارو بر اساس ارتقاها
-            broomUI.style.width = (60 * upgrades.size) + 'px';
-            broomUI.style.height = (100 * upgrades.size) + 'px';
+            broomUI.style.width = (80 * upgrades.size) + 'px';
+            broomUI.style.height = (120 * upgrades.size) + 'px';
             
             // فعال کردن آهنربا اگر خریداری شده
             if (upgrades.magnet) {
@@ -870,16 +1150,20 @@
             gameLoop = requestAnimationFrame(updateGame);
         }
         
-        // ایجاد لکه جدید
+        // ایجاد آشغال جدید
         function createStain() {
-            if (!gameActive) return;
+            if (!gameActive || gamePaused) return;
+            
+            const randomType = trashTypes[Math.floor(Math.random() * trashTypes.length)];
             
             const stain = {
                 x: 20 + Math.random() * 60, // درصد از عرض جاده
                 y: -50,
-                size: 20 + Math.random() * 30,
-                type: 'normal',
-                cleaned: false
+                size: 30 + Math.random() * 30,
+                type: randomType,
+                cleaned: false,
+                rotation: Math.random() * 360,
+                rotationSpeed: (Math.random() - 0.5) * 2
             };
             
             stains.push(stain);
@@ -887,7 +1171,7 @@
         
         // ایجاد لکه ویژه (سوال)
         function createSpecialStain() {
-            if (!gameActive) return;
+            if (!gameActive || gamePaused) return;
             
             const specialStain = {
                 x: 20 + Math.random() * 60,
@@ -914,7 +1198,7 @@
         
         // به‌روزرسانی بازی
         function updateGame(timestamp) {
-            if (!gameActive) return;
+            if (!gameActive || gamePaused) return;
             
             const deltaTime = timestamp - lastTimestamp;
             lastTimestamp = timestamp;
@@ -925,7 +1209,7 @@
             // رسم جاده
             drawRoad();
             
-            // به‌روزرسانی و رسم لکه‌ها
+            // به‌روزرسانی و رسم آشغال‌ها
             updateAndDrawStains(deltaTime);
             
             // به‌روزرسانی و رسم لکه‌های ویژه
@@ -959,26 +1243,31 @@
             }
         }
         
-        // به‌روزرسانی و رسم لکه‌ها
+        // به‌روزرسانی و رسم آشغال‌ها
         function updateAndDrawStains(deltaTime) {
             for (let i = stains.length - 1; i >= 0; i--) {
                 const stain = stains[i];
                 
-                // حرکت لکه به پایین با سرعت فعلی
+                // حرکت آشغال به پایین با سرعت فعلی
                 stain.y += speed * (deltaTime / 16);
                 
-                // رسم لکه
+                // چرخش آشغال
+                stain.rotation += stain.rotationSpeed;
+                
+                // رسم آشغال
                 if (!stain.cleaned) {
-                    ctx.fillStyle = '#333';
-                    ctx.beginPath();
-                    ctx.arc(
-                        stain.x / 100 * gameCanvas.width,
-                        stain.y,
-                        stain.size / 2,
-                        0,
-                        Math.PI * 2
-                    );
-                    ctx.fill();
+                    const x = stain.x / 100 * gameCanvas.width;
+                    const y = stain.y;
+                    const size = stain.size;
+                    
+                    // استفاده از تصاویر داخلی
+                    if (trashImages[stain.type]) {
+                        ctx.save();
+                        ctx.translate(x, y);
+                        ctx.rotate(stain.rotation * Math.PI / 180);
+                        ctx.drawImage(trashImages[stain.type], -size/2, -size/2, size, size);
+                        ctx.restore();
+                    }
                     
                     // بررسی برخورد با جارو
                     if (checkCollision(stain)) {
@@ -986,15 +1275,15 @@
                     }
                 }
                 
-                // اگر لکه از صفحه خارج شد
+                // اگر آشغال از صفحه خارج شد
                 if (stain.y > gameCanvas.height) {
                     if (!stain.cleaned) {
-                        // اگر لکه تمیز نشده، بازی تمام می‌شود
+                        // اگر آشغال تمیز نشده، بازی تمام می‌شود
                         endGame();
                         return;
                     }
                     
-                    // حذف لکه تمیز شده
+                    // حذف آشغال تمیز شده
                     stains.splice(i, 1);
                 }
             }
@@ -1047,12 +1336,12 @@
             }
         }
         
-        // بررسی برخورد جارو با لکه
+        // بررسی برخورد جارو با آشغال
         function checkCollision(stain) {
             const broomRect = broomUI.getBoundingClientRect();
             const gameAreaRect = gameArea.getBoundingClientRect();
             
-            // محاسبه موقعیت لکه در صفحه
+            // محاسبه موقعیت آشغال در صفحه
             const stainX = stain.x / 100 * gameCanvas.width;
             const stainY = stain.y + gameAreaRect.top;
             
@@ -1062,7 +1351,7 @@
                 y: broomRect.top + broomRect.height / 2
             };
             
-            // محاسبه مرکز لکه
+            // محاسبه مرکز آشغال
             const stainCenter = {
                 x: stainX,
                 y: stainY
@@ -1081,7 +1370,7 @@
             return distance < collisionRadius + magnetRadius;
         }
         
-        // تمیز کردن لکه
+        // تمیز کردن آشغال
         function cleanStain(stain, index) {
             stain.cleaned = true;
             
@@ -1106,14 +1395,14 @@
         
         // نمایش سوال
         function showQuestion() {
-            gameActive = false;
+            gamePaused = true;
             
             // فیلتر کردن سوالات بر اساس دسته‌بندی‌های انتخاب شده
             const filteredQuestions = questions.filter(q => selectedCategories.includes(q.subject));
             
             if (filteredQuestions.length === 0) {
                 // اگر سوالی موجود نیست، به بازی بازگرد
-                gameActive = true;
+                gamePaused = false;
                 lastTimestamp = performance.now();
                 gameLoop = requestAnimationFrame(updateGame);
                 return;
@@ -1201,7 +1490,7 @@
             // افزایش سرعت بازی
             speed += 0.2;
             
-            // کاهش فاصله تولید لکه‌ها
+            // کاهش فاصله تولید آشغال‌ها
             clearInterval(stainInterval);
             const newInterval = Math.max(300, 1000 - (currentLevel * 100));
             stainInterval = setInterval(createStain, newInterval);
@@ -1239,6 +1528,38 @@
             finalLevelElement.textContent = currentLevel;
             
             showScreen('gameOver');
+        }
+        
+        // ادامه بازی با پرداخت سکه
+        function continueGame() {
+            if (totalCoins >= 5) {
+                totalCoins -= 5;
+                coins -= 5;
+                saveGameData();
+                
+                // حذف آشغال‌هایی که از صفحه خارج شده‌اند
+                stains = stains.filter(stain => stain.y < gameCanvas.height);
+                
+                // ادامه بازی
+                gameActive = true;
+                gamePaused = false;
+                
+                // شروع تولید آشغال‌ها
+                clearInterval(stainInterval);
+                stainInterval = setInterval(createStain, 1000);
+                
+                // شروع تولید لکه‌های ویژه
+                clearInterval(specialStainInterval);
+                specialStainInterval = setInterval(createSpecialStain, 15000);
+                
+                // شروع حلقه بازی
+                lastTimestamp = performance.now();
+                gameLoop = requestAnimationFrame(updateGame);
+                
+                showScreen('gameScreen');
+            } else {
+                alert('سکه کافی ندارید!');
+            }
         }
         
         // نمایش صفحه انتخاب دسته‌بندی
@@ -1398,6 +1719,7 @@
                         totalCoins -= price;
                         upgrades.magnet = true;
                         magnetEffect.style.display = 'block';
+                        magnetStatusElement.textContent = 'فعال';
                         alert('آهنربای جارو فعال شد!');
                     } else if (upgrades.magnet) {
                         alert('شما قبلاً این ارتقا را خریداری کرده‌اید!');
@@ -1417,8 +1739,8 @@
                         sizePriceElement.textContent = 75 * upgrades.size;
                         
                         // بزرگ‌تر کردن جارو
-                        broomUI.style.width = (60 * upgrades.size) + 'px';
-                        broomUI.style.height = (100 * upgrades.size) + 'px';
+                        broomUI.style.width = (80 * upgrades.size) + 'px';
+                        broomUI.style.height = (120 * upgrades.size) + 'px';
                         
                         alert(`جاروی شما اکنون ${upgrades.size}x بزرگ‌تر شده است!`);
                     } else {
@@ -1434,14 +1756,14 @@
         
         // توقف/ادامه بازی
         function togglePause() {
-            if (gameActive) {
-                gameActive = false;
+            if (gameActive && !gamePaused) {
+                gamePaused = true;
                 clearInterval(stainInterval);
                 clearInterval(specialStainInterval);
                 cancelAnimationFrame(gameLoop);
                 pauseBtn.textContent = 'ادامه';
-            } else {
-                gameActive = true;
+            } else if (gameActive && gamePaused) {
+                gamePaused = false;
                 stainInterval = setInterval(createStain, 1000);
                 specialStainInterval = setInterval(createSpecialStain, 15000);
                 lastTimestamp = performance.now();
@@ -1465,7 +1787,7 @@
         document.addEventListener('touchend', endDrag);
         
         function startDrag(e) {
-            if (!gameActive) return;
+            if (!gameActive || gamePaused) return;
             
             isDragging = true;
             const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
@@ -1476,7 +1798,7 @@
         }
         
         function drag(e) {
-            if (!isDragging || !gameActive) return;
+            if (!isDragging || !gameActive || gamePaused) return;
             
             const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
             const deltaX = clientX - startX;
@@ -1513,7 +1835,7 @@
             showScreen('mainMenu');
         });
         continueBtn.addEventListener('click', () => {
-            gameActive = true;
+            gamePaused = false;
             lastTimestamp = performance.now();
             gameLoop = requestAnimationFrame(updateGame);
             showScreen('gameScreen');
@@ -1522,6 +1844,7 @@
         reportBtn.addEventListener('click', showProgressReport);
         reportCloseBtn.addEventListener('click', () => showScreen('gameOver'));
         categorySaveBtn.addEventListener('click', saveCategories);
+        continueGameBtn.addEventListener('click', continueGame);
         
         // مدیریت گزینه‌های سوال
         option1.addEventListener('click', () => checkAnswer(1));
@@ -1539,6 +1862,9 @@
         
         // بارگذاری اولیه داده‌های بازی
         loadGameData();
+        
+        // بارگذاری تصاویر داخلی
+        createInternalImages();
     </script>
 </body>
 </html>
