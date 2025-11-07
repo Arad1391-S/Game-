@@ -47,6 +47,13 @@
             transition: transform 0.5s, opacity 0.5s;
             backface-visibility: hidden;
             transform-style: preserve-3d;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .screen.active {
+            opacity: 1;
+            pointer-events: all;
         }
         
         #main-menu {
@@ -54,23 +61,34 @@
         }
         
         #game-screen {
-            display: none;
             z-index: 5;
         }
         
         #game-over {
-            display: none;
             z-index: 8;
         }
         
         #shop {
-            display: none;
             z-index: 9;
         }
         
         #question-screen {
-            display: none;
             z-index: 15;
+            background: rgba(0, 0, 0, 0.9);
+        }
+        
+        #tutorial {
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.9);
+        }
+        
+        #progress-report {
+            z-index: 18;
+            background: rgba(0, 0, 0, 0.9);
+        }
+        
+        #category-screen {
+            z-index: 25;
             background: rgba(0, 0, 0, 0.9);
         }
         
@@ -128,6 +146,9 @@
             border: 2px solid transparent;
             border-radius: 10px;
             transition: all 0.3s;
+            cursor: pointer;
+            color: white;
+            font-size: 1.1rem;
         }
         
         .btn-option:hover {
@@ -146,34 +167,26 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
         
-        #road {
+        #game-canvas {
             position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, #555 0%, #555 20%, #777 20%, #777 80%, #555 80%, #555 100%);
-            transform: rotateX(60deg) translateZ(-100px);
-            transform-style: preserve-3d;
+            z-index: 5;
         }
         
-        #road-lines {
+        #game-ui {
             position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 200%;
-            background: repeating-linear-gradient(to bottom, 
-                transparent, 
-                transparent 40px, 
-                yellow 40px, 
-                yellow 80px);
-            animation: roadMove 2s linear infinite;
-            opacity: 0.7;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
         }
         
-        @keyframes roadMove {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(80px); }
-        }
-        
-        #broom {
+        #broom-ui {
             position: absolute;
             width: 60px;
             height: 100px;
@@ -181,7 +194,8 @@
             left: 50%;
             transform: translateX(-50%) translateZ(20px);
             transition: left 0.1s;
-            z-index: 10;
+            z-index: 15;
+            pointer-events: none;
         }
         
         .broom-body {
@@ -207,32 +221,15 @@
             box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.3);
         }
         
-        .stain {
+        #magnet-effect {
             position: absolute;
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
-            background: radial-gradient(circle, #333 0%, #000 70%);
-            transform: translateZ(10px);
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
-            transition: opacity 0.3s;
-        }
-        
-        .stain.cleaned {
-            opacity: 0;
-        }
-        
-        .special-stain {
-            position: absolute;
-            border-radius: 50%;
-            background: radial-gradient(circle, #ffeb3b 0%, #ff9800 70%);
-            transform: translateZ(15px);
-            box-shadow: 0 0 20px gold, 0 5px 15px rgba(0, 0, 0, 0.5);
-            animation: pulse-gold 2s infinite;
-        }
-        
-        @keyframes pulse-gold {
-            0% { box-shadow: 0 0 10px gold; }
-            50% { box-shadow: 0 0 30px gold, 0 0 40px orange; }
-            100% { box-shadow: 0 0 10px gold; }
+            border: 2px dashed gold;
+            display: none;
+            pointer-events: none;
+            z-index: 5;
         }
         
         .stats {
@@ -274,32 +271,6 @@
         .coin {
             color: gold;
             margin: 0 5px;
-        }
-        
-        .particles {
-            position: absolute;
-            pointer-events: none;
-            z-index: 20;
-        }
-        
-        .particle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.7;
-        }
-        
-        #magnet-effect {
-            position: absolute;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 2px dashed gold;
-            display: none;
-            pointer-events: none;
-            z-index: 5;
         }
         
         .floating {
@@ -347,50 +318,160 @@
             font-size: 1.2rem;
             min-height: 30px;
         }
+        
+        .level-indicator {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            z-index: 10;
+        }
+        
+        @keyframes levelUp {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .level-up-animation {
+            animation: levelUp 0.5s ease-in-out;
+        }
+        
+        .tutorial-steps {
+            width: 100%;
+            margin: 20px 0;
+        }
+        
+        .step {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-right: 4px solid #ff8a00;
+        }
+        
+        .category-btn {
+            width: 100%;
+            margin: 5px 0;
+            text-align: center;
+        }
+        
+        .category-btn.selected {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+        }
+        
+        .progress-item {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+        
+        .creator-credit {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .transition-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .transition-overlay.active {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div id="main-menu" class="screen">
+        <!-- لایه انتقال -->
+        <div class="transition-overlay" id="transition-overlay"></div>
+        
+        <!-- صفحه اصلی -->
+        <div id="main-menu" class="screen active">
             <h1 class="floating">جاروی جادویی - نسخه پیشرفته</h1>
             <p>لکه‌ها را با کشیدن انگشت تمیز کنید!</p>
             <p>لکه‌های طلایی سوالات درسی دارند - پاسخ صحیح = ۱۰ سکه!</p>
             <button id="start-btn" class="btn">شروع بازی</button>
+            <button id="tutorial-btn" class="btn">آموزش بازی</button>
             <button id="shop-btn" class="btn">فروشگاه</button>
+            <button id="category-btn" class="btn">انتخاب درس‌ها</button>
             <div class="stats">
                 <div class="stat">رکورد: <span id="high-score">0</span></div>
                 <div class="stat">سکه: <span id="total-coins">0</span></div>
+                <div class="stat">سطح: <span id="player-level">1</span></div>
             </div>
+            <div class="creator-credit">ساخته شده توسط آراد مقدم</div>
         </div>
         
+        <!-- صفحه بازی -->
         <div id="game-screen" class="screen">
+            <div class="level-indicator">سطح <span id="current-level">1</span></div>
             <div class="stats">
                 <div class="stat">امتیاز: <span id="score">0</span></div>
                 <div class="stat">سکه: <span id="coins">0</span></div>
                 <div class="stat">سرعت: <span id="speed">1x</span></div>
             </div>
             <div id="game-area">
-                <div id="road">
-                    <div id="road-lines"></div>
+                <canvas id="game-canvas"></canvas>
+                <div id="game-ui">
+                    <div id="broom-ui">
+                        <div class="broom-body"></div>
+                        <div class="broom-head"></div>
+                    </div>
+                    <div id="magnet-effect"></div>
                 </div>
-                <div id="broom">
-                    <div class="broom-body"></div>
-                    <div class="broom-head"></div>
-                </div>
-                <div id="magnet-effect"></div>
             </div>
             <button id="pause-btn" class="btn">توقف</button>
         </div>
         
+        <!-- صفحه پایان بازی -->
         <div id="game-over" class="screen">
             <h2>بازی تمام شد!</h2>
             <p>امتیاز شما: <span id="final-score">0</span></p>
             <p>رکورد جدید: <span id="new-record">0</span></p>
             <p>سکه‌های کسب شده: <span id="earned-coins">0</span></p>
+            <p>سطح فعلی: <span id="final-level">1</span></p>
             <button id="restart-btn" class="btn">دوباره بازی کنید</button>
             <button id="menu-btn" class="btn">منوی اصلی</button>
+            <button id="report-btn" class="btn">مشاهده گزارش</button>
         </div>
         
+        <!-- صفحه فروشگاه -->
         <div id="shop" class="screen">
             <h2>فروشگاه</h2>
             <p>جاروی خود را ارتقا دهید!</p>
@@ -398,10 +479,10 @@
             <div class="upgrade-item">
                 <div class="upgrade-info">
                     <h3>جاروی سریع‌تر</h3>
-                    <p>سرعت حرکت جارو افزایش می‌یابد</p>
+                    <p>سرعت حرکت جارو افزایش می‌یابد (سطح فعلی: <span id="speed-level">1</span>)</p>
                 </div>
                 <div class="upgrade-price">
-                    <span class="coin">50</span>
+                    <span class="coin" id="speed-price">50</span>
                     <button class="btn upgrade-btn" data-upgrade="speed">خرید</button>
                 </div>
             </div>
@@ -420,17 +501,18 @@
             <div class="upgrade-item">
                 <div class="upgrade-info">
                     <h3>جاروی بزرگ‌تر</h3>
-                    <p>مساحت تمیزکاری جارو افزایش می‌یابد</p>
+                    <p>مساحت تمیزکاری جارو افزایش می‌یابد (سطح فعلی: <span id="size-level">1</span>)</p>
                 </div>
                 <div class="upgrade-price">
-                    <span class="coin">75</span>
+                    <span class="coin" id="size-price">75</span>
                     <button class="btn upgrade-btn" data-upgrade="size">خرید</button>
                 </div>
             </div>
             
-            <button id="back-btn" class="btn">بازگشت</button>
+            <button id="shop-back-btn" class="btn">بازگشت</button>
         </div>
         
+        <!-- صفحه سوالات -->
         <div id="question-screen" class="screen">
             <h2>سوال درسی</h2>
             <p>پاسخ صحیح = ۱۰ سکه پاداش!</p>
@@ -450,43 +532,148 @@
             
             <button id="continue-btn" class="btn" style="display: none;">ادامه بازی</button>
         </div>
+        
+        <!-- صفحه آموزش -->
+        <div id="tutorial" class="screen">
+            <h2>آموزش بازی جاروی جادویی</h2>
+            
+            <div class="tutorial-steps">
+                <div class="step">
+                    <p>جارو را با کشیدن انگشت به چپ و راست حرکت دهید</p>
+                </div>
+                <div class="step">
+                    <p>لکه‌های معمولی را برای کسب امتیاز تمیز کنید</p>
+                </div>
+                <div class="step">
+                    <p>لکه‌های طلایی شامل سوالات درسی هستند</p>
+                </div>
+                <div class="step">
+                    <p>پاسخ صحیح = ۱۰ سکه پاداش!</p>
+                </div>
+                <div class="step">
+                    <p>با افزایش امتیاز، سطح بازی و سرعت افزایش می‌یابد</p>
+                </div>
+                <div class="step">
+                    <p>از فروشگاه برای ارتقای جارو استفاده کنید</p>
+                </div>
+            </div>
+            
+            <button id="tutorial-close" class="btn">شروع بازی</button>
+        </div>
+        
+        <!-- صفحه گزارش پیشرفت -->
+        <div id="progress-report" class="screen">
+            <h2>گزارش پیشرفت آموزشی</h2>
+            
+            <div class="progress-item">
+                <span>زمان بازی:</span>
+                <span id="play-time">0 دقیقه</span>
+            </div>
+            
+            <div class="progress-item">
+                <span>کل سوالات پاسخ داده شده:</span>
+                <span id="total-questions">0</span>
+            </div>
+            
+            <h3>عملکرد در هر درس:</h3>
+            
+            <div id="subject-progress">
+                <!-- اینجا با جاوااسکریپت پر می‌شود -->
+            </div>
+            
+            <h3>نقاط قوت:</h3>
+            <div id="strengths-list">
+                <!-- اینجا با جاوااسکریپت پر می‌شود -->
+            </div>
+            
+            <h3>نیاز به تمرین بیشتر:</h3>
+            <div id="weaknesses-list">
+                <!-- اینجا با جاوااسکریپت پر می‌شود -->
+            </div>
+            
+            <button id="report-close" class="btn">بازگشت</button>
+        </div>
+        
+        <!-- صفحه انتخاب درس -->
+        <div id="category-screen" class="screen">
+            <h2>انتخاب درس‌ها</h2>
+            <p>درس‌هایی که می‌خواهید در بازی بیاموزید را انتخاب کنید:</p>
+            <div id="category-list" style="width: 100%; margin: 20px 0;">
+                <!-- با جاوااسکریپت پر می‌شود -->
+            </div>
+            <button id="category-save" class="btn">ذخیره و بازگشت</button>
+        </div>
     </div>
 
     <script>
         // عناصر DOM
-        const mainMenu = document.getElementById('main-menu');
-        const gameScreen = document.getElementById('game-screen');
-        const gameOverScreen = document.getElementById('game-over');
-        const shopScreen = document.getElementById('shop');
-        const questionScreen = document.getElementById('question-screen');
+        const screens = {
+            mainMenu: document.getElementById('main-menu'),
+            gameScreen: document.getElementById('game-screen'),
+            gameOver: document.getElementById('game-over'),
+            shop: document.getElementById('shop'),
+            questionScreen: document.getElementById('question-screen'),
+            tutorial: document.getElementById('tutorial'),
+            progressReport: document.getElementById('progress-report'),
+            categoryScreen: document.getElementById('category-screen')
+        };
         
+        const transitionOverlay = document.getElementById('transition-overlay');
+        const gameCanvas = document.getElementById('game-canvas');
+        const ctx = gameCanvas.getContext('2d');
+        const broomUI = document.getElementById('broom-ui');
+        const magnetEffect = document.getElementById('magnet-effect');
+        const gameArea = document.getElementById('game-area');
+        
+        // دکمه‌ها
         const startBtn = document.getElementById('start-btn');
+        const tutorialBtn = document.getElementById('tutorial-btn');
         const shopBtn = document.getElementById('shop-btn');
+        const categoryBtn = document.getElementById('category-btn');
         const pauseBtn = document.getElementById('pause-btn');
         const restartBtn = document.getElementById('restart-btn');
         const menuBtn = document.getElementById('menu-btn');
-        const backBtn = document.getElementById('back-btn');
+        const shopBackBtn = document.getElementById('shop-back-btn');
         const continueBtn = document.getElementById('continue-btn');
+        const tutorialCloseBtn = document.getElementById('tutorial-close');
+        const reportBtn = document.getElementById('report-btn');
+        const reportCloseBtn = document.getElementById('report-close');
+        const categorySaveBtn = document.getElementById('category-save');
         
+        // عناصر آماری
         const highScoreElement = document.getElementById('high-score');
         const totalCoinsElement = document.getElementById('total-coins');
+        const playerLevelElement = document.getElementById('player-level');
         const scoreElement = document.getElementById('score');
         const coinsElement = document.getElementById('coins');
         const speedElement = document.getElementById('speed');
+        const currentLevelElement = document.getElementById('current-level');
         const finalScoreElement = document.getElementById('final-score');
         const newRecordElement = document.getElementById('new-record');
         const earnedCoinsElement = document.getElementById('earned-coins');
+        const finalLevelElement = document.getElementById('final-level');
+        const speedLevelElement = document.getElementById('speed-level');
+        const sizeLevelElement = document.getElementById('size-level');
+        const speedPriceElement = document.getElementById('speed-price');
+        const sizePriceElement = document.getElementById('size-price');
         
-        const gameArea = document.getElementById('game-area');
-        const broom = document.getElementById('broom');
-        const magnetEffect = document.getElementById('magnet-effect');
-        
+        // عناصر سوالات
         const questionText = document.getElementById('question-text');
         const option1 = document.getElementById('option1');
         const option2 = document.getElementById('option2');
         const option3 = document.getElementById('option3');
         const option4 = document.getElementById('option4');
         const questionResult = document.getElementById('question-result');
+        
+        // عناصر گزارش
+        const playTimeElement = document.getElementById('play-time');
+        const totalQuestionsElement = document.getElementById('total-questions');
+        const subjectProgressElement = document.getElementById('subject-progress');
+        const strengthsListElement = document.getElementById('strengths-list');
+        const weaknessesListElement = document.getElementById('weaknesses-list');
+        
+        // لیست دسته‌بندی‌ها
+        const categoryList = document.getElementById('category-list');
         
         // متغیرهای بازی
         let gameActive = false;
@@ -495,7 +682,9 @@
         let speed = 1;
         let highScore = 0;
         let totalCoins = 0;
-        let broomPosition = 50; // درصد از عرض صفحه
+        let playerLevel = 1;
+        let currentLevel = 1;
+        let broomPosition = 50;
         let stains = [];
         let specialStains = [];
         let stainInterval;
@@ -504,6 +693,9 @@
         let lastTimestamp = 0;
         let currentQuestion = null;
         let questionAnswered = false;
+        let startTime = 0;
+        let playTime = 0;
+        let selectedCategories = ["ریاضی", "علوم", "فارسی"];
         
         // ارتقاها
         let upgrades = {
@@ -511,6 +703,19 @@
             magnet: false,
             size: 1
         };
+        
+        // پیشرفت آموزشی
+        let learningProgress = {
+            "ریاضی": { correct: 0, total: 0 },
+            "علوم": { correct: 0, total: 0 },
+            "فارسی": { correct: 0, total: 0 },
+            "مطالعات اجتماعی": { correct: 0, total: 0 },
+            "دینی": { correct: 0, total: 0 },
+            "انگلیسی": { correct: 0, total: 0 }
+        };
+        
+        // آستانه‌های سطح
+        const levelThresholds = [100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500, 5500];
         
         // بانک سوالات پایه هفتم
         const questions = [
@@ -527,25 +732,6 @@
                 options: ["۰.۲۵", "۰.۵", "۰.۷۵", "۱.۲۵"],
                 correct: 3
             },
-            {
-                subject: "ریاضی",
-                question: "مساحت مستطیلی به طول ۸ و عرض ۵ چقدر است؟",
-                options: ["۱۳", "۲۶", "۴۰", "۴۵"],
-                correct: 3
-            },
-            {
-                subject: "ریاضی",
-                question: "حاصل ۱۵ - ۷ × ۲ چیست؟",
-                options: ["۱۶", "۱", "۱۱", "۲۱"],
-                correct: 2
-            },
-            {
-                subject: "ریاضی",
-                question: "عدد ۰.۵ به صورت کسر چگونه نوشته می‌شود؟",
-                options: ["۱/۴", "۱/۲", "۱/۳", "۲/۳"],
-                correct: 2
-            },
-            
             // علوم
             {
                 subject: "علوم",
@@ -559,25 +745,6 @@
                 options: ["ریشه", "ساقه", "برگ", "گل"],
                 correct: 3
             },
-            {
-                subject: "علوم",
-                question: "کدام گزینه از گازهای گلخانه‌ای است؟",
-                options: ["اکسیژن", "نیتروژن", "دی اکسید کربن", "هیدروژن"],
-                correct: 3
-            },
-            {
-                subject: "علوم",
-                question: "سخت‌ترین ماده طبیعی در بدن انسان چیست؟",
-                options: ["استخوان", "مو", "ناخن", "مینای دندان"],
-                correct: 4
-            },
-            {
-                subject: "علوم",
-                question: "کدام یک از جانوران خونسرد است؟",
-                options: ["پنگوئن", "خزنده", "وال", "خفاش"],
-                correct: 2
-            },
-            
             // فارسی
             {
                 subject: "فارسی",
@@ -590,85 +757,104 @@
                 question: "کدام یک از موارد زیر 'ضمیر' نیست؟",
                 options: ["من", "تو", "او", "کتاب"],
                 correct: 4
-            },
-            {
-                subject: "فارسی",
-                question: "معنی کلمه 'فرزانگی' چیست؟",
-                options: ["ثروتمندی", "دانایی", "شجاعت", "مهربانی"],
-                correct: 2
-            },
-            {
-                subject: "فارسی",
-                question: "کدام بیت از سعدی است؟",
-                options: [
-                    "بنى آدم اعضای یک پیکرند", 
-                    "چو ایران نباشد تن من مباد", 
-                    "آمد بهار و سبزه بردمید از زمین", 
-                    "ایزد تعالی به ما قوت دهد"
-                ],
-                correct: 1
-            },
-            {
-                subject: "فارسی",
-                question: "کدام کلمه به معنی 'آبشار' است؟",
-                options: ["دریا", "رودخانه", "چشمه", "آبشار"],
-                correct: 4
             }
         ];
+        
+        // مدیریت نمایش صفحات
+        function showScreen(screenName) {
+            // پنهان کردن همه صفحات
+            Object.values(screens).forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // نمایش صفحه مورد نظر با انیمیشن
+            transitionOverlay.classList.add('active');
+            
+            setTimeout(() => {
+                if (screens[screenName]) {
+                    screens[screenName].classList.add('active');
+                }
+                transitionOverlay.classList.remove('active');
+            }, 300);
+        }
         
         // بارگذاری داده‌ها از localStorage
         function loadGameData() {
             highScore = parseInt(localStorage.getItem('highScore')) || 0;
             totalCoins = parseInt(localStorage.getItem('totalCoins')) || 0;
+            playerLevel = parseInt(localStorage.getItem('playerLevel')) || 1;
             upgrades.speed = parseInt(localStorage.getItem('upgradeSpeed')) || 1;
             upgrades.magnet = localStorage.getItem('upgradeMagnet') === 'true';
             upgrades.size = parseInt(localStorage.getItem('upgradeSize')) || 1;
             
+            // بارگذاری پیشرفت آموزشی
+            const savedProgress = localStorage.getItem('learningProgress');
+            if (savedProgress) {
+                learningProgress = JSON.parse(savedProgress);
+            }
+            
+            // بارگذاری دسته‌بندی‌های انتخاب شده
+            const savedCategories = localStorage.getItem('selectedCategories');
+            if (savedCategories) {
+                selectedCategories = JSON.parse(savedCategories);
+            }
+            
+            // به‌روزرسانی UI
             highScoreElement.textContent = highScore;
             totalCoinsElement.textContent = totalCoins;
+            playerLevelElement.textContent = playerLevel;
+            speedLevelElement.textContent = upgrades.speed;
+            sizeLevelElement.textContent = upgrades.size;
+            speedPriceElement.textContent = 50 * upgrades.speed;
+            sizePriceElement.textContent = 75 * upgrades.size;
         }
         
         // ذخیره داده‌ها در localStorage
         function saveGameData() {
             localStorage.setItem('highScore', highScore);
             localStorage.setItem('totalCoins', totalCoins);
+            localStorage.setItem('playerLevel', playerLevel);
             localStorage.setItem('upgradeSpeed', upgrades.speed);
             localStorage.setItem('upgradeMagnet', upgrades.magnet);
             localStorage.setItem('upgradeSize', upgrades.size);
-        }
-        
-        // نمایش صفحه مورد نظر
-        function showScreen(screen) {
-            mainMenu.style.display = 'none';
-            gameScreen.style.display = 'none';
-            gameOverScreen.style.display = 'none';
-            shopScreen.style.display = 'none';
-            questionScreen.style.display = 'none';
-            
-            screen.style.display = 'flex';
+            localStorage.setItem('learningProgress', JSON.stringify(learningProgress));
+            localStorage.setItem('selectedCategories', JSON.stringify(selectedCategories));
         }
         
         // شروع بازی
         function startGame() {
-            showScreen(gameScreen);
+            showScreen('gameScreen');
             gameActive = true;
             score = 0;
             coins = 0;
             speed = 1;
+            currentLevel = 1;
             stains = [];
             specialStains = [];
+            startTime = Date.now();
             
+            // تنظیم اندازه Canvas
+            gameCanvas.width = gameArea.offsetWidth;
+            gameCanvas.height = gameArea.offsetHeight;
+            
+            // به‌روزرسانی UI
             scoreElement.textContent = score;
             coinsElement.textContent = coins;
             speedElement.textContent = speed + 'x';
-            
-            // پاکسازی لکه‌های قبلی
-            document.querySelectorAll('.stain').forEach(stain => stain.remove());
-            document.querySelectorAll('.special-stain').forEach(stain => stain.remove());
+            currentLevelElement.textContent = currentLevel;
             
             // تنظیم موقعیت اولیه جارو
             broomPosition = 50;
             updateBroomPosition();
+            
+            // تنظیم اندازه جارو بر اساس ارتقاها
+            broomUI.style.width = (60 * upgrades.size) + 'px';
+            broomUI.style.height = (100 * upgrades.size) + 'px';
+            
+            // فعال کردن آهنربا اگر خریداری شده
+            if (upgrades.magnet) {
+                magnetEffect.style.display = 'block';
+            }
             
             // شروع تولید لکه‌ها
             clearInterval(stainInterval);
@@ -676,7 +862,7 @@
             
             // شروع تولید لکه‌های ویژه
             clearInterval(specialStainInterval);
-            specialStainInterval = setInterval(createSpecialStain, 15000); // هر 15 ثانیه
+            specialStainInterval = setInterval(createSpecialStain, 15000);
             
             // شروع حلقه بازی
             cancelAnimationFrame(gameLoop);
@@ -688,58 +874,35 @@
         function createStain() {
             if (!gameActive) return;
             
-            const stain = document.createElement('div');
-            stain.className = 'stain';
-            
-            // اندازه لکه بر اساس سطح بازی
-            const size = 20 + Math.random() * 30;
-            stain.style.width = size + 'px';
-            stain.style.height = size + 'px';
-            
-            // موقعیت تصادفی در جاده
-            const position = 20 + Math.random() * 60; // درصد از عرض جاده
-            stain.style.left = position + '%';
-            stain.style.top = '-50px';
-            
-            gameArea.appendChild(stain);
-            stains.push({
-                element: stain,
-                x: position,
+            const stain = {
+                x: 20 + Math.random() * 60, // درصد از عرض جاده
                 y: -50,
-                size: size,
+                size: 20 + Math.random() * 30,
+                type: 'normal',
                 cleaned: false
-            });
+            };
+            
+            stains.push(stain);
         }
         
         // ایجاد لکه ویژه (سوال)
         function createSpecialStain() {
             if (!gameActive) return;
             
-            const specialStain = document.createElement('div');
-            specialStain.className = 'special-stain';
-            
-            const size = 40;
-            specialStain.style.width = size + 'px';
-            specialStain.style.height = size + 'px';
-            
-            // موقعیت تصادفی در جاده
-            const position = 20 + Math.random() * 60;
-            specialStain.style.left = position + '%';
-            specialStain.style.top = '-50px';
-            
-            gameArea.appendChild(specialStain);
-            specialStains.push({
-                element: specialStain,
-                x: position,
+            const specialStain = {
+                x: 20 + Math.random() * 60,
                 y: -50,
-                size: size,
+                size: 40,
+                type: 'special',
                 cleaned: false
-            });
+            };
+            
+            specialStains.push(specialStain);
         }
         
         // به‌روزرسانی موقعیت جارو
         function updateBroomPosition() {
-            broom.style.left = broomPosition + '%';
+            broomUI.style.left = broomPosition + '%';
             
             // به‌روزرسانی موقعیت اثر آهنربا اگر فعال باشد
             if (upgrades.magnet) {
@@ -756,21 +919,75 @@
             const deltaTime = timestamp - lastTimestamp;
             lastTimestamp = timestamp;
             
-            // به‌روزرسانی موقعیت لکه‌ها
+            // پاک کردن Canvas
+            ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+            
+            // رسم جاده
+            drawRoad();
+            
+            // به‌روزرسانی و رسم لکه‌ها
+            updateAndDrawStains(deltaTime);
+            
+            // به‌روزرسانی و رسم لکه‌های ویژه
+            updateAndDrawSpecialStains(deltaTime);
+            
+            // افزایش تدریجی سرعت
+            if (timestamp % 1000 < 16) {
+                speed += 0.05;
+                speedElement.textContent = speed.toFixed(1) + 'x';
+            }
+            
+            // بررسی ارتقا سطح
+            checkLevelUp();
+            
+            gameLoop = requestAnimationFrame(updateGame);
+        }
+        
+        // رسم جاده
+        function drawRoad() {
+            // پس‌زمینه جاده
+            ctx.fillStyle = '#555';
+            ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+            
+            // خطوط وسط جاده
+            ctx.fillStyle = 'yellow';
+            const lineHeight = 40;
+            const lineSpacing = 40;
+            
+            for (let y = 0; y < gameCanvas.height; y += lineHeight + lineSpacing) {
+                ctx.fillRect(gameCanvas.width / 2 - 5, y, 10, lineHeight);
+            }
+        }
+        
+        // به‌روزرسانی و رسم لکه‌ها
+        function updateAndDrawStains(deltaTime) {
             for (let i = stains.length - 1; i >= 0; i--) {
                 const stain = stains[i];
                 
                 // حرکت لکه به پایین با سرعت فعلی
                 stain.y += speed * (deltaTime / 16);
-                stain.element.style.top = stain.y + 'px';
                 
-                // بررسی برخورد با جارو
-                if (!stain.cleaned && checkCollision(stain)) {
-                    cleanStain(stain, i);
+                // رسم لکه
+                if (!stain.cleaned) {
+                    ctx.fillStyle = '#333';
+                    ctx.beginPath();
+                    ctx.arc(
+                        stain.x / 100 * gameCanvas.width,
+                        stain.y,
+                        stain.size / 2,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fill();
+                    
+                    // بررسی برخورد با جارو
+                    if (checkCollision(stain)) {
+                        cleanStain(stain, i);
+                    }
                 }
                 
                 // اگر لکه از صفحه خارج شد
-                if (stain.y > gameArea.offsetHeight) {
+                if (stain.y > gameCanvas.height) {
                     if (!stain.cleaned) {
                         // اگر لکه تمیز نشده، بازی تمام می‌شود
                         endGame();
@@ -778,78 +995,99 @@
                     }
                     
                     // حذف لکه تمیز شده
-                    stain.element.remove();
                     stains.splice(i, 1);
                 }
             }
-            
-            // به‌روزرسانی موقعیت لکه‌های ویژه
+        }
+        
+        // به‌روزرسانی و رسم لکه‌های ویژه
+        function updateAndDrawSpecialStains(deltaTime) {
             for (let i = specialStains.length - 1; i >= 0; i--) {
                 const specialStain = specialStains[i];
                 
                 // حرکت لکه ویژه به پایین با سرعت فعلی
                 specialStain.y += speed * (deltaTime / 16);
-                specialStain.element.style.top = specialStain.y + 'px';
                 
-                // بررسی برخورد با جارو
-                if (!specialStain.cleaned && checkCollision(specialStain)) {
-                    cleanSpecialStain(specialStain, i);
+                // رسم لکه ویژه
+                if (!specialStain.cleaned) {
+                    // ایجاد گرادیان برای لکه طلایی
+                    const gradient = ctx.createRadialGradient(
+                        specialStain.x / 100 * gameCanvas.width,
+                        specialStain.y,
+                        0,
+                        specialStain.x / 100 * gameCanvas.width,
+                        specialStain.y,
+                        specialStain.size / 2
+                    );
+                    
+                    gradient.addColorStop(0, '#ffeb3b');
+                    gradient.addColorStop(1, '#ff9800');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(
+                        specialStain.x / 100 * gameCanvas.width,
+                        specialStain.y,
+                        specialStain.size / 2,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fill();
+                    
+                    // بررسی برخورد با جارو
+                    if (checkCollision(specialStain)) {
+                        cleanSpecialStain(specialStain, i);
+                    }
                 }
                 
                 // اگر لکه ویژه از صفحه خارج شد
-                if (specialStain.y > gameArea.offsetHeight) {
-                    specialStain.element.remove();
+                if (specialStain.y > gameCanvas.height) {
                     specialStains.splice(i, 1);
                 }
             }
-            
-            // افزایش تدریجی سرعت
-            if (timestamp % 1000 < 16) { // تقریباً هر ثانیه
-                speed += 0.05;
-                speedElement.textContent = speed.toFixed(1) + 'x';
-            }
-            
-            gameLoop = requestAnimationFrame(updateGame);
         }
         
         // بررسی برخورد جارو با لکه
         function checkCollision(stain) {
-            const broomRect = broom.getBoundingClientRect();
-            const stainRect = stain.element.getBoundingClientRect();
+            const broomRect = broomUI.getBoundingClientRect();
+            const gameAreaRect = gameArea.getBoundingClientRect();
             
-            // اگر آهنربا فعال باشد، شعاع جذب بیشتر است
-            const magnetRadius = upgrades.magnet ? 75 : 0;
-            const collisionRadius = (broomRect.width / 2) + (stainRect.width / 2) + magnetRadius;
+            // محاسبه موقعیت لکه در صفحه
+            const stainX = stain.x / 100 * gameCanvas.width;
+            const stainY = stain.y + gameAreaRect.top;
             
+            // محاسبه مرکز جارو
             const broomCenter = {
                 x: broomRect.left + broomRect.width / 2,
                 y: broomRect.top + broomRect.height / 2
             };
             
+            // محاسبه مرکز لکه
             const stainCenter = {
-                x: stainRect.left + stainRect.width / 2,
-                y: stainRect.top + stainRect.height / 2
+                x: stainX,
+                y: stainY
             };
             
+            // محاسبه فاصله
             const distance = Math.sqrt(
                 Math.pow(broomCenter.x - stainCenter.x, 2) + 
                 Math.pow(broomCenter.y - stainCenter.y, 2)
             );
             
-            return distance < collisionRadius;
+            // شعاع برخورد (با در نظر گرفتن آهنربا)
+            const collisionRadius = (broomRect.width / 2) + (stain.size / 2);
+            const magnetRadius = upgrades.magnet ? 75 : 0;
+            
+            return distance < collisionRadius + magnetRadius;
         }
         
         // تمیز کردن لکه
         function cleanStain(stain, index) {
             stain.cleaned = true;
-            stain.element.classList.add('cleaned');
             
             // افزایش امتیاز
             score += 10;
             scoreElement.textContent = score;
-            
-            // ایجاد اثر ذرات
-            createParticles(stain.element);
             
             // شانس دریافت سکه
             if (Math.random() < 0.3) {
@@ -861,22 +1099,29 @@
         // تمیز کردن لکه ویژه (سوال)
         function cleanSpecialStain(specialStain, index) {
             specialStain.cleaned = true;
-            specialStain.element.classList.add('cleaned');
             
             // نمایش سوال
             showQuestion();
-            
-            // ایجاد اثر ذرات ویژه
-            createSpecialParticles(specialStain.element);
         }
         
         // نمایش سوال
         function showQuestion() {
             gameActive = false;
             
+            // فیلتر کردن سوالات بر اساس دسته‌بندی‌های انتخاب شده
+            const filteredQuestions = questions.filter(q => selectedCategories.includes(q.subject));
+            
+            if (filteredQuestions.length === 0) {
+                // اگر سوالی موجود نیست، به بازی بازگرد
+                gameActive = true;
+                lastTimestamp = performance.now();
+                gameLoop = requestAnimationFrame(updateGame);
+                return;
+            }
+            
             // انتخاب سوال تصادفی
-            const randomIndex = Math.floor(Math.random() * questions.length);
-            currentQuestion = questions[randomIndex];
+            const randomIndex = Math.floor(Math.random() * filteredQuestions.length);
+            currentQuestion = filteredQuestions[randomIndex];
             
             // نمایش سوال و گزینه‌ها
             questionText.textContent = `[${currentQuestion.subject}] ${currentQuestion.question}`;
@@ -895,7 +1140,7 @@
             continueBtn.style.display = 'none';
             questionAnswered = false;
             
-            showScreen(questionScreen);
+            showScreen('questionScreen');
         }
         
         // بررسی پاسخ سوال
@@ -904,6 +1149,12 @@
             
             questionAnswered = true;
             const isCorrect = parseInt(selectedOption) === currentQuestion.correct;
+            
+            // به‌روزرسانی پیشرفت آموزشی
+            learningProgress[currentQuestion.subject].total++;
+            if (isCorrect) {
+                learningProgress[currentQuestion.subject].correct++;
+            }
             
             // رنگ‌آمیزی گزینه‌ها
             option1.classList.add(1 === currentQuestion.correct ? 'correct' : 'incorrect');
@@ -926,93 +1177,34 @@
             continueBtn.style.display = 'block';
         }
         
-        // ایجاد ذرات برای اثر تمیز کردن
-        function createParticles(element) {
-            const rect = element.getBoundingClientRect();
-            const particleCount = 10;
-            
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                
-                const size = 2 + Math.random() * 5;
-                particle.style.width = size + 'px';
-                particle.style.height = size + 'px';
-                
-                particle.style.left = (rect.left + rect.width / 2) + 'px';
-                particle.style.top = (rect.top + rect.height / 2) + 'px';
-                
-                document.body.appendChild(particle);
-                
-                // انیمیشن ذره
-                const angle = Math.random() * Math.PI * 2;
-                const distance = 20 + Math.random() * 50;
-                const duration = 500 + Math.random() * 1000;
-                
-                particle.animate([
-                    { 
-                        transform: `translate(0, 0)`, 
-                        opacity: 1 
-                    },
-                    { 
-                        transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`, 
-                        opacity: 0 
-                    }
-                ], {
-                    duration: duration,
-                    easing: 'ease-out'
-                });
-                
-                // حذف ذره پس از انیمیشن
-                setTimeout(() => {
-                    particle.remove();
-                }, duration);
+        // بررسی ارتقا سطح
+        function checkLevelUp() {
+            for (let i = levelThresholds.length - 1; i >= 0; i--) {
+                if (score >= levelThresholds[i] && currentLevel < i + 2) {
+                    levelUp(i + 2);
+                    break;
+                }
             }
         }
         
-        // ایجاد ذرات ویژه برای لکه‌های سوال
-        function createSpecialParticles(element) {
-            const rect = element.getBoundingClientRect();
-            const particleCount = 20;
+        // ارتقا سطح
+        function levelUp(newLevel) {
+            currentLevel = newLevel;
+            currentLevelElement.textContent = currentLevel;
             
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.background = 'gold';
-                
-                const size = 3 + Math.random() * 7;
-                particle.style.width = size + 'px';
-                particle.style.height = size + 'px';
-                
-                particle.style.left = (rect.left + rect.width / 2) + 'px';
-                particle.style.top = (rect.top + rect.height / 2) + 'px';
-                
-                document.body.appendChild(particle);
-                
-                // انیمیشن ذره
-                const angle = Math.random() * Math.PI * 2;
-                const distance = 30 + Math.random() * 70;
-                const duration = 700 + Math.random() * 1300;
-                
-                particle.animate([
-                    { 
-                        transform: `translate(0, 0)`, 
-                        opacity: 1 
-                    },
-                    { 
-                        transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`, 
-                        opacity: 0 
-                    }
-                ], {
-                    duration: duration,
-                    easing: 'ease-out'
-                });
-                
-                // حذف ذره پس از انیمیشن
-                setTimeout(() => {
-                    particle.remove();
-                }, duration);
-            }
+            // نمایش انیمیشن ارتقا سطح
+            currentLevelElement.classList.add('level-up-animation');
+            setTimeout(() => {
+                currentLevelElement.classList.remove('level-up-animation');
+            }, 500);
+            
+            // افزایش سرعت بازی
+            speed += 0.2;
+            
+            // کاهش فاصله تولید لکه‌ها
+            clearInterval(stainInterval);
+            const newInterval = Math.max(300, 1000 - (currentLevel * 100));
+            stainInterval = setInterval(createStain, newInterval);
         }
         
         // پایان بازی
@@ -1021,6 +1213,9 @@
             clearInterval(stainInterval);
             clearInterval(specialStainInterval);
             cancelAnimationFrame(gameLoop);
+            
+            // محاسبه زمان بازی
+            playTime = Math.floor((Date.now() - startTime) / 1000 / 60); // به دقیقه
             
             // محاسبه سکه‌های کسب شده
             const earnedCoins = coins;
@@ -1031,6 +1226,7 @@
             if (score > highScore) {
                 highScore = score;
                 newRecord = true;
+                playerLevel = Math.max(playerLevel, currentLevel);
             }
             
             // ذخیره داده‌ها
@@ -1040,8 +1236,218 @@
             finalScoreElement.textContent = score;
             newRecordElement.textContent = newRecord ? 'بله!' : 'خیر';
             earnedCoinsElement.textContent = earnedCoins;
+            finalLevelElement.textContent = currentLevel;
             
-            showScreen(gameOverScreen);
+            showScreen('gameOver');
+        }
+        
+        // نمایش صفحه انتخاب دسته‌بندی
+        function showCategorySelection() {
+            // پر کردن لیست دسته‌بندی‌ها
+            categoryList.innerHTML = '';
+            
+            Object.keys(learningProgress).forEach(subject => {
+                const button = document.createElement('button');
+                button.className = `btn category-btn ${selectedCategories.includes(subject) ? 'selected' : ''}`;
+                button.setAttribute('data-subject', subject);
+                button.textContent = subject;
+                button.style.display = 'block';
+                button.style.width = '100%';
+                button.style.margin = '5px 0';
+                
+                button.addEventListener('click', function() {
+                    const subject = this.getAttribute('data-subject');
+                    
+                    if (selectedCategories.includes(subject)) {
+                        selectedCategories = selectedCategories.filter(s => s !== subject);
+                        this.classList.remove('selected');
+                    } else {
+                        selectedCategories.push(subject);
+                        this.classList.add('selected');
+                    }
+                });
+                
+                categoryList.appendChild(button);
+            });
+            
+            showScreen('categoryScreen');
+        }
+        
+        // ذخیره دسته‌بندی‌ها
+        function saveCategories() {
+            if (selectedCategories.length === 0) {
+                alert('لطفاً حداقل یک درس را انتخاب کنید!');
+                return;
+            }
+            
+            saveGameData();
+            showScreen('mainMenu');
+        }
+        
+        // نمایش گزارش پیشرفت
+        function showProgressReport() {
+            // محاسبه زمان بازی
+            playTimeElement.textContent = playTime + ' دقیقه';
+            
+            // محاسبه کل سوالات پاسخ داده شده
+            let totalQuestions = 0;
+            let totalCorrect = 0;
+            
+            for (const subject in learningProgress) {
+                totalQuestions += learningProgress[subject].total;
+                totalCorrect += learningProgress[subject].correct;
+            }
+            
+            totalQuestionsElement.textContent = totalQuestions;
+            
+            // نمایش پیشرفت در هر درس
+            subjectProgressElement.innerHTML = '';
+            for (const subject in learningProgress) {
+                if (learningProgress[subject].total > 0) {
+                    const progressItem = document.createElement('div');
+                    progressItem.className = 'progress-item';
+                    
+                    const percentage = Math.round((learningProgress[subject].correct / learningProgress[subject].total) * 100);
+                    
+                    progressItem.innerHTML = `
+                        <span>${subject}</span>
+                        <span>${learningProgress[subject].correct} از ${learningProgress[subject].total} (${percentage}%)</span>
+                    `;
+                    
+                    const progressBar = document.createElement('div');
+                    progressBar.className = 'progress-bar';
+                    
+                    const progressFill = document.createElement('div');
+                    progressFill.className = 'progress-fill';
+                    progressFill.style.width = `${percentage}%`;
+                    
+                    progressBar.appendChild(progressFill);
+                    
+                    subjectProgressElement.appendChild(progressItem);
+                    subjectProgressElement.appendChild(progressBar);
+                }
+            }
+            
+            // شناسایی نقاط قوت و ضعف
+            const strengths = [];
+            const weaknesses = [];
+            
+            for (const subject in learningProgress) {
+                if (learningProgress[subject].total >= 3) { // حداقل ۳ سوال پاسخ داده شده
+                    const percentage = (learningProgress[subject].correct / learningProgress[subject].total) * 100;
+                    
+                    if (percentage >= 70) {
+                        strengths.push(subject);
+                    } else if (percentage <= 40) {
+                        weaknesses.push(subject);
+                    }
+                }
+            }
+            
+            // نمایش نقاط قوت
+            strengthsListElement.innerHTML = '';
+            if (strengths.length > 0) {
+                strengths.forEach(strength => {
+                    const item = document.createElement('div');
+                    item.className = 'progress-item';
+                    item.textContent = strength;
+                    strengthsListElement.appendChild(item);
+                });
+            } else {
+                strengthsListElement.innerHTML = '<p>هنوز اطلاعات کافی برای تحلیل وجود ندارد</p>';
+            }
+            
+            // نمایش نیاز به تمرین بیشتر
+            weaknessesListElement.innerHTML = '';
+            if (weaknesses.length > 0) {
+                weaknesses.forEach(weakness => {
+                    const item = document.createElement('div');
+                    item.className = 'progress-item';
+                    item.textContent = weakness;
+                    weaknessesListElement.appendChild(item);
+                });
+            } else {
+                weaknessesListElement.innerHTML = '<p>همه درس‌ها در سطح قابل قبولی هستند</p>';
+            }
+            
+            showScreen('progressReport');
+        }
+        
+        // خرید ارتقا
+        function buyUpgrade(type) {
+            let price = 0;
+            
+            switch(type) {
+                case 'speed':
+                    price = 50 * upgrades.speed;
+                    if (totalCoins >= price) {
+                        totalCoins -= price;
+                        upgrades.speed++;
+                        speedLevelElement.textContent = upgrades.speed;
+                        speedPriceElement.textContent = 50 * upgrades.speed;
+                        alert(`جاروی شما اکنون ${upgrades.speed}x سریع‌تر حرکت می‌کند!`);
+                    } else {
+                        alert('سکه کافی ندارید!');
+                        return;
+                    }
+                    break;
+                    
+                case 'magnet':
+                    price = 100;
+                    if (totalCoins >= price && !upgrades.magnet) {
+                        totalCoins -= price;
+                        upgrades.magnet = true;
+                        magnetEffect.style.display = 'block';
+                        alert('آهنربای جارو فعال شد!');
+                    } else if (upgrades.magnet) {
+                        alert('شما قبلاً این ارتقا را خریداری کرده‌اید!');
+                        return;
+                    } else {
+                        alert('سکه کافی ندارید!');
+                        return;
+                    }
+                    break;
+                    
+                case 'size':
+                    price = 75 * upgrades.size;
+                    if (totalCoins >= price) {
+                        totalCoins -= price;
+                        upgrades.size++;
+                        sizeLevelElement.textContent = upgrades.size;
+                        sizePriceElement.textContent = 75 * upgrades.size;
+                        
+                        // بزرگ‌تر کردن جارو
+                        broomUI.style.width = (60 * upgrades.size) + 'px';
+                        broomUI.style.height = (100 * upgrades.size) + 'px';
+                        
+                        alert(`جاروی شما اکنون ${upgrades.size}x بزرگ‌تر شده است!`);
+                    } else {
+                        alert('سکه کافی ندارید!');
+                        return;
+                    }
+                    break;
+            }
+            
+            saveGameData();
+            loadGameData();
+        }
+        
+        // توقف/ادامه بازی
+        function togglePause() {
+            if (gameActive) {
+                gameActive = false;
+                clearInterval(stainInterval);
+                clearInterval(specialStainInterval);
+                cancelAnimationFrame(gameLoop);
+                pauseBtn.textContent = 'ادامه';
+            } else {
+                gameActive = true;
+                stainInterval = setInterval(createStain, 1000);
+                specialStainInterval = setInterval(createSpecialStain, 15000);
+                lastTimestamp = performance.now();
+                gameLoop = requestAnimationFrame(updateGame);
+                pauseBtn.textContent = 'توقف';
+            }
         }
         
         // مدیریت رویدادهای لمسی/ماوس
@@ -1093,38 +1499,29 @@
         
         // مدیریت دکمه‌ها
         startBtn.addEventListener('click', startGame);
-        shopBtn.addEventListener('click', () => showScreen(shopScreen));
-        pauseBtn.addEventListener('click', () => {
-            if (gameActive) {
-                gameActive = false;
-                clearInterval(stainInterval);
-                clearInterval(specialStainInterval);
-                cancelAnimationFrame(gameLoop);
-                pauseBtn.textContent = 'ادامه';
-            } else {
-                gameActive = true;
-                stainInterval = setInterval(createStain, 1000);
-                specialStainInterval = setInterval(createSpecialStain, 15000);
-                lastTimestamp = performance.now();
-                gameLoop = requestAnimationFrame(updateGame);
-                pauseBtn.textContent = 'توقف';
-            }
-        });
+        tutorialBtn.addEventListener('click', () => showScreen('tutorial'));
+        shopBtn.addEventListener('click', () => showScreen('shop'));
+        categoryBtn.addEventListener('click', showCategorySelection);
+        pauseBtn.addEventListener('click', togglePause);
         restartBtn.addEventListener('click', startGame);
         menuBtn.addEventListener('click', () => {
             loadGameData();
-            showScreen(mainMenu);
+            showScreen('mainMenu');
         });
-        backBtn.addEventListener('click', () => {
+        shopBackBtn.addEventListener('click', () => {
             loadGameData();
-            showScreen(mainMenu);
+            showScreen('mainMenu');
         });
         continueBtn.addEventListener('click', () => {
             gameActive = true;
             lastTimestamp = performance.now();
             gameLoop = requestAnimationFrame(updateGame);
-            showScreen(gameScreen);
+            showScreen('gameScreen');
         });
+        tutorialCloseBtn.addEventListener('click', startGame);
+        reportBtn.addEventListener('click', showProgressReport);
+        reportCloseBtn.addEventListener('click', () => showScreen('gameOver'));
+        categorySaveBtn.addEventListener('click', saveCategories);
         
         // مدیریت گزینه‌های سوال
         option1.addEventListener('click', () => checkAnswer(1));
@@ -1139,60 +1536,6 @@
                 buyUpgrade(upgradeType);
             });
         });
-        
-        function buyUpgrade(type) {
-            let price = 0;
-            
-            switch(type) {
-                case 'speed':
-                    price = 50 * upgrades.speed;
-                    if (totalCoins >= price) {
-                        totalCoins -= price;
-                        upgrades.speed++;
-                        alert(`جاروی شما اکنون ${upgrades.speed}x سریع‌تر حرکت می‌کند!`);
-                    } else {
-                        alert('سکه کافی ندارید!');
-                        return;
-                    }
-                    break;
-                    
-                case 'magnet':
-                    price = 100;
-                    if (totalCoins >= price && !upgrades.magnet) {
-                        totalCoins -= price;
-                        upgrades.magnet = true;
-                        magnetEffect.style.display = 'block';
-                        alert('آهنربای جارو فعال شد!');
-                    } else if (upgrades.magnet) {
-                        alert('شما قبلاً این ارتقا را خریداری کرده‌اید!');
-                        return;
-                    } else {
-                        alert('سکه کافی ندارید!');
-                        return;
-                    }
-                    break;
-                    
-                case 'size':
-                    price = 75 * upgrades.size;
-                    if (totalCoins >= price) {
-                        totalCoins -= price;
-                        upgrades.size++;
-                        
-                        // بزرگ‌تر کردن جارو
-                        broom.style.width = (60 * upgrades.size) + 'px';
-                        broom.style.height = (100 * upgrades.size) + 'px';
-                        
-                        alert(`جاروی شما اکنون ${upgrades.size}x بزرگ‌تر شده است!`);
-                    } else {
-                        alert('سکه کافی ندارید!');
-                        return;
-                    }
-                    break;
-            }
-            
-            saveGameData();
-            loadGameData();
-        }
         
         // بارگذاری اولیه داده‌های بازی
         loadGameData();
